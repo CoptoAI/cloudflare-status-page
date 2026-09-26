@@ -1,0 +1,48 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cloudflare-status-page",
+  "main": "src/index.js",
+  "compatibility_date": "2026-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "triggers": {
+    // Fire every minute (Cloudflare's smallest interval). The effective probe
+    // cadence is controlled by `probeIntervalMin` in src/config.js (default 5);
+    // a cycle only probes once that much time has elapsed. Change the config
+    // value, not this cron, to adjust how often services are checked.
+    "crons": ["* * * * *"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "status-page-db",
+      "database_id": "c4e8c0bd-82cf-4c61-8ecd-6b73f7e13e77",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "REGION_PROBE",
+        "class_name": "RegionProbe"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["RegionProbe"]
+    }
+  ],
+  "vars": {
+    // Non-secret defaults. Secrets (EMAILIT_API_KEY, ADMIN_PASSWORD) are set
+    // via `wrangler secret put` or the dashboard after first deploy.
+    "PUBLIC_BASE_URL": "status.koinoniaos.com"
+  }
+}
